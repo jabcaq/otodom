@@ -1,4 +1,5 @@
-FROM node:18-slim
+# Use Node.js 20 LTS
+FROM node:20-slim
 
 # Install latest chrome dev package and fonts
 RUN apt-get update \
@@ -33,11 +34,11 @@ RUN groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
 USER pptruser
 
 # Expose port
-EXPOSE 3000
+EXPOSE 10000
 
 # Set environment variables
 ENV NODE_ENV=production
 ENV CHROME_BIN=/usr/bin/google-chrome
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["npm", "start"] 

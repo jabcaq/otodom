@@ -4,7 +4,6 @@
   "description": "Otodom real estate scraper",
   "main": "server.js",
   "scripts": {
-    "preinstall": "npm install -g npm@latest",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "postinstall": "npx playwright install chromium"
@@ -20,6 +19,6 @@
     "nodemon": "^3.0.0"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.17.0"
   }
 } 
