@@ -1,4 +1,4 @@
-const { chromium } = require('playwright');
+const { chromium } = require('@playwright/test');
 const axios = require('axios');
 
 async function scrapeOtodom(url, context) {
