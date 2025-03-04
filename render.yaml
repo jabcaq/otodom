@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: otodom-scraper
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: 18.0.0
+      - key: NODE_ENV
+        value: production
+    scaling:
+      minInstances: 1
+      maxInstances: 1
+    resources:
+      cpu: 1x
+      memory: 2048
+    autoDeploy: true 
