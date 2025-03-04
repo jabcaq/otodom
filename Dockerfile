@@ -17,8 +17,8 @@ WORKDIR /usr/src/app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install --production
+# Install dependencies (using new --omit=dev flag instead of --production)
+RUN npm install --omit=dev
 
 # Copy app source
 COPY . .
@@ -40,4 +40,4 @@ ENV NODE_ENV=production
 ENV CHROME_BIN=/usr/bin/google-chrome
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["npm", "start"]
