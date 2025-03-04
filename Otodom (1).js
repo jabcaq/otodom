@@ -6,24 +6,51 @@ async function scrapeOtodom(url, browser) {
   const otodomResults = [];
 
   // Set a longer default timeout
-  page.setDefaultTimeout(60000);
+  page.setDefaultTimeout(120000); // 2 minutes
   
   // Add user agent to look more like a real browser
   await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+  
+  // Set viewport to a common resolution
+  await page.setViewport({ width: 1920, height: 1080 });
 
   try {
-    await page.goto(url, { waitUntil: 'networkidle0', timeout: 60000 });
+    // Try to load the page with retries
+    let retries = 3;
+    let success = false;
     
-    // Wait for the page to be fully loaded
-    await page.waitForFunction(() => document.readyState === 'complete', { timeout: 60000 });
+    while (retries > 0 && !success) {
+      try {
+        console.log(`Próba załadowania strony (pozostało prób: ${retries})...`);
+        await page.goto(url, { 
+          waitUntil: 'domcontentloaded',
+          timeout: 120000 
+        });
+        
+        // Wait for network to be idle
+        await page.waitForFunction(() => document.readyState === 'complete', { timeout: 60000 });
+        success = true;
+      } catch (error) {
+        console.log(`Próba ${4 - retries} nie powiodła się:`, error.message);
+        retries--;
+        if (retries > 0) {
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+    }
+
+    if (!success) {
+      throw new Error('Nie udało się załadować strony po 3 próbach');
+    }
 
     // Akceptacja ciasteczek
     try {
-      await page.waitForSelector('#onetrust-accept-btn-handler', { timeout: 5000 });
+      await page.waitForSelector('#onetrust-accept-btn-handler', { timeout: 10000 });
       await page.click('#onetrust-accept-btn-handler');
       console.log('Zaakceptowano ciasteczka');
       // Wait a bit after accepting cookies
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(3000);
     } catch (error) {
       console.log('Nie znaleziono przycisku akceptacji ciasteczek lub już zaakceptowano');
     }
@@ -32,13 +59,15 @@ async function scrapeOtodom(url, browser) {
     const selectors = [
       '[data-cy="listing-item-link"]',
       'a[href*="/pl/oferta/"]',
-      '.css-1pvd0aj-Text'
+      '.css-1pvd0aj-Text',
+      '[data-cy="search.listing"] a',
+      '.css-1pvd0aj-Text a'
     ];
 
     let links = [];
     for (const selector of selectors) {
       try {
-        await page.waitForSelector(selector, { timeout: 10000 });
+        await page.waitForSelector(selector, { timeout: 15000 });
         links = await page.evaluate((sel) => {
           return Array.from(document.querySelectorAll(sel))
             .map(link => link.href)
@@ -62,10 +91,16 @@ async function scrapeOtodom(url, browser) {
 
     for (const link of linksToScrape) {
       try {
-        await page.goto(link, { waitUntil: 'networkidle0', timeout: 60000 });
+        // Add random delay between requests
+        await new Promise(resolve => setTimeout(resolve, Math.random() * 3000 + 2000));
+        
+        await page.goto(link, { 
+          waitUntil: 'domcontentloaded',
+          timeout: 120000 
+        });
         await page.waitForFunction(() => document.readyState === 'complete', { timeout: 60000 });
         
-        await page.waitForSelector('[data-cy="adPageAdTitle"]');
+        await page.waitForSelector('[data-cy="adPageAdTitle"]', { timeout: 30000 });
 
         // Sprawdzenie i kliknięcie przycisku OK, jeśli istnieje
         try {
